@@ -1,7 +1,10 @@
 # AWS 月次コストレポート メール通知システム 設計書
 
 - 作成日: 2026-08-08
-- ステータス: 承認済み
+- 最終更新: 2026-08-09
+- ステータス: 実装済み（実デプロイ・実 AWS 環境での動作確認は未実施）
+
+実装は `feat/monthly-cost-report` ブランチ。実装時に判明した追加事項は §4.8 と §5.1 に記録している。
 
 ## 1. 目的
 
@@ -51,7 +54,7 @@ SNS クライアントはスタックのデプロイ先リージョン（環境�
 
 ### 4.1 Lambda モジュール構成
 
-boto3 は Lambda ランタイムに同梱されているため、外部依存はゼロ。バンドル処理（Docker / pip install）は不要で、`lambda.Code.fromAsset` でソースディレクトリをそのまま同梱する。
+boto3 は Lambda ランタイムに同梱されているため、外部依存はゼロ。バンドル処理（Docker / pip install）は不要で、`lambda.Code.fromAsset` でソースディレクトリをそのまま同梱する（ただし §4.8 の除外設定が必要）。
 
 ```
 lambda/
@@ -219,6 +222,25 @@ cdk deploy -c notifyEmail=you@example.com
 
 未指定の場合は synth 時にエラーで停止させる（誤ってメール未設定のままデプロイされるのを防ぐ）。
 
+### 4.8 アセットの決定性（実装時に追加）
+
+`lambda/` をそのまま `Code.fromAsset` に渡すと、ローカルで pytest を実行した際に生成される `lambda/cost_report/__pycache__/*.pyc` がアセットに同梱される。
+
+影響は 2 点。
+
+1. **アセットハッシュがローカルの実行履歴に依存する。** テストを実行したかどうかで `S3Key` が変わり、コード無変更でも `cdk diff` に差分が出て `cdk deploy` が再アップロードを行う。CI とローカルでも結果が食い違う。
+2. **不要なファイルがデプロイされる。** 生成されるのはローカル Python（3.10）のバイトコードで、ランタイムの 3.13 は `cpython-313` タグの `.pyc` しか読まないため実行時には無視される。動作は壊れないが、無意味なファイルが本番に載る。
+
+対策として除外を明示する。
+
+```typescript
+code: lambda.Code.fromAsset(path.join(__dirname, "..", "lambda"), {
+  exclude: ["**/__pycache__", "**/*.pyc"],
+}),
+```
+
+回帰テストとして、`__pycache__/handler.cpython-310.pyc` を作った状態と削除した状態で合成し、テンプレートが完全に一致することを検証する。
+
 ## 5. テスト方針
 
 | 対象 | 手法 |
@@ -230,6 +252,26 @@ cdk deploy -c notifyEmail=you@example.com
 | CDK スタック | `aws-cdk-lib/assertions` の `Template`。cron 式、IAM ポリシー文、SNS サブスクリプション、`retryAttempts` を検証 |
 
 Lambda のランタイムは Python 3.13 だが、ローカル環境の Python は 3.10 のため、Lambda 本体とテストコードは 3.10 で動作する構文に留める（`match` 文や `X | Y` 型注釈を使わない）。これによりローカルで pytest がそのまま動く。
+
+### 5.1 テスト実行環境（実装時に追加）
+
+**Python**: 当初の想定は `pip install --user pytest` だったが、対象環境には `pip` も `venv` も入っていなかった（`python3-pip` / `python3-venv` が未導入）。`sudo apt install -y python3-venv python3-pip` で導入したうえで、プロジェクト直下に `.venv` を作る方式に変更した。
+
+```bash
+python3 -m venv .venv
+.venv/bin/pip install pytest boto3
+.venv/bin/python -m pytest
+```
+
+`boto3` はローカルテスト（`botocore.stub.Stubber`）専用の開発依存であり、Lambda には同梱しない。`requirements.txt` は作らない。`.venv/` は `.gitignore` 済み。
+
+**jest のモジュール解決順**: `npm run build` は `lib/*.js` をソースと同じディレクトリに出力する。jest の `moduleFileExtensions` 既定値は `.js` が `.ts` より先に来るため、そのままでは `import ... from "../lib/aws-monthly-cost-report-stack"` がビルド済みの `.js` に解決され、**テストがビルド当時の古いコードを検証する**。実際にこの問題により、§4.8 の修正を `.ts` に入れた直後のテストが「修正が効いていない」結果を返した。
+
+`.ts` を優先するよう明示する。
+
+```js
+moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
+```
 
 ## 6. 成果物
 
@@ -246,3 +288,6 @@ Lambda のランタイムは Python 3.13 だが、ローカル環境の Python �
 | `logs:*` の縮小 | `AWSLambdaBasicExecutionRole` 相当の3アクションに縮小 | 最小権限の主旨に沿う。ユーザー承認済み |
 | CE API の呼び出し回数 | 2ヶ月分を1リクエスト | リクエスト課金 $0.01/回、実装も単純 |
 | 非同期再試行 | Lambda 側 `retryAttempts: 0` + boto3 内部リトライ | エラーメールの重複送信を防ぐ |
+| アセットの `.pyc` 除外 | `Code.fromAsset` に `exclude` を指定（実装時に追加） | 除外しないとローカルのテスト実行履歴でアセットハッシュが変わる。§4.8 |
+| jest の解決順 | `moduleFileExtensions` で `.ts` を優先（実装時に追加） | 既定順ではビルド済み `.js` を検証してしまう。§5.1 |
+| ローカル Python 環境 | `.venv`（`pip install --user` から変更） | 対象環境に `pip` / `venv` が未導入だったため。§5.1 |

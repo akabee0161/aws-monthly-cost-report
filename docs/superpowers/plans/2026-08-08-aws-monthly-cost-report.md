@@ -60,7 +60,7 @@
 - Consumes: なし
 - Produces: `npm run build`, `npm test`, `pytest` が実行可能な状態。`pytest.ini` の `pythonpath = lambda` により、テストから `from cost_report import ...` でインポートできる。
 
-- [ ] **Step 1: `package.json` を作成する**
+- [x] **Step 1: `package.json` を作成する**
 
 ```json
 {
@@ -92,7 +92,7 @@
 }
 ```
 
-- [ ] **Step 2: `tsconfig.json` を作成する**
+- [x] **Step 2: `tsconfig.json` を作成する**
 
 ```json
 {
@@ -120,7 +120,7 @@
 }
 ```
 
-- [ ] **Step 3: `cdk.json` を作成する**
+- [x] **Step 3: `cdk.json` を作成する**
 
 ```json
 {
@@ -139,7 +139,7 @@
 }
 ```
 
-- [ ] **Step 4: `jest.config.js` を作成する**
+- [x] **Step 4: `jest.config.js` を作成する**
 
 ```js
 module.exports = {
@@ -152,7 +152,7 @@ module.exports = {
 };
 ```
 
-- [ ] **Step 5: `pytest.ini` を作成する**
+- [x] **Step 5: `pytest.ini` を作成する**
 
 `pythonpath` により `lambda/` ディレクトリがインポートパスに入り、テストから `cost_report` パッケージを読める。
 
@@ -162,11 +162,11 @@ pythonpath = lambda
 testpaths = tests/python
 ```
 
-- [ ] **Step 6: 空のパッケージファイルを作成する**
+- [x] **Step 6: 空のパッケージファイルを作成する**
 
 `lambda/cost_report/__init__.py` と `tests/python/__init__.py` を**空ファイル**として作成する。
 
-- [ ] **Step 7: `.gitignore` を更新する**
+- [x] **Step 7: `.gitignore` を更新する**
 
 既存の `.gitignore` を以下の内容で上書きする。
 
@@ -182,7 +182,7 @@ __pycache__/
 .venv/
 ```
 
-- [ ] **Step 8: 依存をインストールしてツールチェーンを検証する**
+- [x] **Step 8: 依存をインストールしてツールチェーンを検証する**
 
 Run:
 ```bash
@@ -192,7 +192,7 @@ python3 -m pytest --version
 ```
 Expected: いずれもエラーなくバージョンが表示される。`python3 -m pytest` が「No module named pytest」で失敗する場合は `python3 -m pip install --user pytest` を実行する。
 
-- [ ] **Step 9: コミット**
+- [x] **Step 9: コミット**
 
 ```bash
 git add package.json package-lock.json tsconfig.json cdk.json jest.config.js pytest.ini .gitignore lambda tests
@@ -214,7 +214,7 @@ git commit -m "chore: CDK + pytest プロジェクトの骨組みを追加"
   - `def build_report_period(today: date) -> ReportPeriod`
   - `ReportPeriod.target_label` プロパティ — `"2026-07"` 形式の文字列を返す
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/python/test_periods.py`:
 
@@ -273,12 +273,12 @@ def test_target_labelはYYYY_MM形式を返す():
     assert period.target_label == "2026-07"
 ```
 
-- [ ] **Step 2: テストを実行して失敗を確認する**
+- [x] **Step 2: テストを実行して失敗を確認する**
 
 Run: `python3 -m pytest tests/python/test_periods.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'cost_report.periods'`
 
-- [ ] **Step 3: 最小の実装を書く**
+- [x] **Step 3: 最小の実装を書く**
 
 `lambda/cost_report/periods.py`:
 
@@ -336,12 +336,12 @@ def build_report_period(today: date) -> ReportPeriod:
     )
 ```
 
-- [ ] **Step 4: テストを実行して成功を確認する**
+- [x] **Step 4: テストを実行して成功を確認する**
 
 Run: `python3 -m pytest tests/python/test_periods.py -v`
 Expected: PASS（6 passed）
 
-- [ ] **Step 5: コミット**
+- [x] **Step 5: コミット**
 
 ```bash
 git add lambda/cost_report/periods.py tests/python/test_periods.py
@@ -371,7 +371,7 @@ git commit -m "feat: レポート対象期間の計算モジュールを追加"
 - 金額 0 のサービスは `by_service` から除外する。
 - `total` は `by_service` の合計。`GroupBy` 指定時は CE の `Total` フィールドが空になるため、グループを合算する必要がある。
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/python/test_cost_explorer.py`:
 
@@ -520,12 +520,12 @@ def test_get_monthは該当月がなければ合計0を返す():
     assert result.unit == "USD"
 ```
 
-- [ ] **Step 2: テストを実行して失敗を確認する**
+- [x] **Step 2: テストを実行して失敗を確認する**
 
 Run: `python3 -m pytest tests/python/test_cost_explorer.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'cost_report.cost_explorer'`
 
-- [ ] **Step 3: 最小の実装を書く**
+- [x] **Step 3: 最小の実装を書く**
 
 `lambda/cost_report/cost_explorer.py`:
 
@@ -621,12 +621,12 @@ def get_month(costs: Dict[date, MonthlyCost], period_start: date) -> MonthlyCost
     )
 ```
 
-- [ ] **Step 4: テストを実行して成功を確認する**
+- [x] **Step 4: テストを実行して成功を確認する**
 
 Run: `python3 -m pytest tests/python/test_cost_explorer.py -v`
 Expected: PASS（5 passed）
 
-- [ ] **Step 5: コミット**
+- [x] **Step 5: コミット**
 
 ```bash
 git add lambda/cost_report/cost_explorer.py tests/python/test_cost_explorer.py
@@ -655,7 +655,7 @@ git commit -m "feat: Cost Explorer からのコスト取得と正規化を追加
 - 全角文字を含む行の桁揃えのため、`unicodedata.east_asian_width` で表示幅を数える `_pad` を使う。
 - 前月合計が 0 のときは変化率を出さない（ゼロ除算回避）。
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/python/test_formatter.py`:
 
@@ -792,12 +792,12 @@ def test_エラー本文に例外種別とリクエストIDが含まれる():
     assert "対象期間     : 2026-07-01 〜 2026-07-31" in body
 ```
 
-- [ ] **Step 2: テストを実行して失敗を確認する**
+- [x] **Step 2: テストを実行して失敗を確認する**
 
 Run: `python3 -m pytest tests/python/test_formatter.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'cost_report.formatter'`
 
-- [ ] **Step 3: 最小の実装を書く**
+- [x] **Step 3: 最小の実装を書く**
 
 `lambda/cost_report/formatter.py`:
 
@@ -971,14 +971,14 @@ def build_error_body(period: ReportPeriod, error: BaseException, request_id: str
     return "\n".join(lines)
 ```
 
-- [ ] **Step 4: テストを実行して成功を確認する**
+- [x] **Step 4: テストを実行して成功を確認する**
 
 Run: `python3 -m pytest tests/python/test_formatter.py -v`
 Expected: PASS（12 passed）
 
 失敗する場合は、期待文字列側ではなく実装の桁揃え定数（`_NAME_WIDTH`, `_AMOUNT_WIDTH`）を疑う。テストは「1件目の行の金額部分までの表示幅」と「その他行の表示幅」が一致することを検証しているので、`_pad` が表示幅ベースになっていれば揃う。
 
-- [ ] **Step 5: コミット**
+- [x] **Step 5: コミット**
 
 ```bash
 git add lambda/cost_report/formatter.py tests/python/test_formatter.py
@@ -1002,7 +1002,7 @@ git commit -m "feat: メール件名と本文のフォーマッタを追加"
 
 **設計上の要点:** `formatter` は ASCII 件名しか生成しないが、`sanitize_subject` を最後の防波堤として置く。ここが無いと、将来サービス名などを件名に含めた際に SNS が `InvalidParameter` を返して**エラー通知すら送れなくなる**。
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/python/test_notifier.py`:
 
@@ -1058,12 +1058,12 @@ def test_publish時にも件名がサニタイズされる():
         stubber.assert_no_pending_responses()
 ```
 
-- [ ] **Step 2: テストを実行して失敗を確認する**
+- [x] **Step 2: テストを実行して失敗を確認する**
 
 Run: `python3 -m pytest tests/python/test_notifier.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'cost_report.notifier'`
 
-- [ ] **Step 3: 最小の実装を書く**
+- [x] **Step 3: 最小の実装を書く**
 
 `lambda/cost_report/notifier.py`:
 
@@ -1105,12 +1105,12 @@ def publish(client, topic_arn: str, subject: str, message: str) -> None:
     )
 ```
 
-- [ ] **Step 4: テストを実行して成功を確認する**
+- [x] **Step 4: テストを実行して成功を確認する**
 
 Run: `python3 -m pytest tests/python/test_notifier.py -v`
 Expected: PASS（5 passed）
 
-- [ ] **Step 5: コミット**
+- [x] **Step 5: コミット**
 
 ```bash
 git add lambda/cost_report/notifier.py tests/python/test_notifier.py
@@ -1137,7 +1137,7 @@ git commit -m "feat: SNS 通知モジュールを追加"
 - エラー通知の Publish 自体が失敗しても、元の例外を握り潰さない。
 - `SNS_TOPIC_ARN` はハンドラ冒頭で読む。未設定なら通知先が無いので `KeyError` をそのまま送出する。
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `tests/python/test_handler.py`:
 
@@ -1252,12 +1252,12 @@ def test_SNS_TOPIC_ARN未設定ならKeyErrorを送出する(monkeypatch):
         handler.lambda_handler({}, FakeContext())
 ```
 
-- [ ] **Step 2: テストを実行して失敗を確認する**
+- [x] **Step 2: テストを実行して失敗を確認する**
 
 Run: `python3 -m pytest tests/python/test_handler.py -v`
 Expected: FAIL — `ModuleNotFoundError: No module named 'cost_report.handler'`
 
-- [ ] **Step 3: 最小の実装を書く**
+- [x] **Step 3: 最小の実装を書く**
 
 `lambda/cost_report/handler.py`:
 
@@ -1342,17 +1342,17 @@ def lambda_handler(event, context) -> Dict[str, str]:
         raise
 ```
 
-- [ ] **Step 4: テストを実行して成功を確認する**
+- [x] **Step 4: テストを実行して成功を確認する**
 
 Run: `python3 -m pytest tests/python/test_handler.py -v`
 Expected: PASS（4 passed）
 
-- [ ] **Step 5: Python テスト全体を実行する**
+- [x] **Step 5: Python テスト全体を実行する**
 
 Run: `python3 -m pytest -v`
 Expected: PASS（32 passed）
 
-- [ ] **Step 6: コミット**
+- [x] **Step 6: コミット**
 
 ```bash
 git add lambda/cost_report/handler.py tests/python/test_handler.py
@@ -1374,7 +1374,7 @@ git commit -m "feat: Lambda ハンドラとエラーハンドリングを追加"
   - `interface AwsMonthlyCostReportStackProps extends StackProps` — `notifyEmail: string`, `topNServices?: number`, `scheduleDayOfMonth?: string`
   - `class AwsMonthlyCostReportStack extends Stack` — 読み取り用に `readonly topic: sns.Topic` と `readonly reportFunction: lambda.Function` を公開する
 
-- [ ] **Step 1: 失敗するテストを書く**
+- [x] **Step 1: 失敗するテストを書く**
 
 `test/aws-monthly-cost-report-stack.test.ts`:
 
@@ -1502,12 +1502,12 @@ test("環境変数 TOP_N_SERVICES は既定で 10、上書き可能である", (
 });
 ```
 
-- [ ] **Step 2: テストを実行して失敗を確認する**
+- [x] **Step 2: テストを実行して失敗を確認する**
 
 Run: `npx jest -t "SNS トピック"`
 Expected: FAIL — `Cannot find module '../lib/aws-monthly-cost-report-stack'`
 
-- [ ] **Step 3: スタックを実装する**
+- [x] **Step 3: スタックを実装する**
 
 `lib/aws-monthly-cost-report-stack.ts`:
 
@@ -1593,7 +1593,7 @@ export class AwsMonthlyCostReportStack extends Stack {
 }
 ```
 
-- [ ] **Step 4: `bin/app.ts` を実装する**
+- [x] **Step 4: `bin/app.ts` を実装する**
 
 ```typescript
 #!/usr/bin/env node
@@ -1624,14 +1624,14 @@ new AwsMonthlyCostReportStack(app, "AwsMonthlyCostReportStack", {
 });
 ```
 
-- [ ] **Step 5: テストとビルドを実行して成功を確認する**
+- [x] **Step 5: テストとビルドを実行して成功を確認する**
 
 Run: `npm run build && npm test`
 Expected: `tsc` がエラーなく完了し、Jest が 9 passed。
 
 `AWS::Lambda::EventInvokeConfig` のテストが失敗する場合は、`retryAttempts: 0` が指定されているか確認する（CDK は `retryAttempts` 指定時にこのリソースを生成する）。
 
-- [ ] **Step 6: synth が通ることを確認する**
+- [x] **Step 6: synth が通ることを確認する**
 
 Run: `npx cdk synth -c notifyEmail=test@example.com --quiet`
 Expected: エラーなく完了する（AWS 認証情報は不要）。
@@ -1639,7 +1639,7 @@ Expected: エラーなく完了する（AWS 認証情報は不要）。
 Run: `npx cdk synth --quiet`
 Expected: FAIL — `context 'notifyEmail' が指定されていません` というエラーで停止する。
 
-- [ ] **Step 7: コミット**
+- [x] **Step 7: コミット**
 
 ```bash
 git add lib bin test
@@ -1657,7 +1657,7 @@ git commit -m "feat: Lambda/EventBridge/SNS/IAM を定義する CDK スタック
 - Consumes: Task 1〜7 の全成果物
 - Produces: なし
 
-- [ ] **Step 1: `README.md` を作成する**
+- [x] **Step 1: `README.md` を作成する**
 
 以下の内容を書く。コマンドは実際に Task 1〜7 で動作確認したものと一致させること。
 
@@ -1831,12 +1831,12 @@ SNS トピック、Lambda、EventBridge Rule、IAM ロール、ロググルー�
 - Lambda / SNS / EventBridge / CloudWatch Logs: 無料利用枠の範囲内（月1回実行、メール1通）
 ````
 
-- [ ] **Step 2: README のコマンドが正しいことを確認する**
+- [x] **Step 2: README のコマンドが正しいことを確認する**
 
 Run: `npm run build && npm test && python3 -m pytest -q && npx cdk synth -c notifyEmail=test@example.com --quiet`
 Expected: すべて成功する。
 
-- [ ] **Step 3: コミット**
+- [x] **Step 3: コミット**
 
 ```bash
 git add README.md
@@ -1847,18 +1847,42 @@ git commit -m "docs: デプロイ手順と SNS サブスクリプション確認
 
 ## 完了条件
 
-- [ ] `python3 -m pytest` が全件成功する（32 tests）
-- [ ] `npm test` が全件成功する（9 tests）
-- [ ] `npm run build` が警告なく完了する
-- [ ] `npx cdk synth -c notifyEmail=test@example.com` が成功する
-- [ ] `npx cdk synth`（context 無し）が明示的なエラーで停止する
-- [ ] `README.md` にデプロイ・SNS 確認・手動実行・削除の各手順が記載されている
+- [x] `pytest` が全件成功する（32 tests） — 実行コマンドは `.venv/bin/python -m pytest`（下記「計画からの変更点」3 を参照）
+- [x] `npm test` が全件成功する（**10 tests**。計画の 9 件に回帰テストを 1 件追加。変更点 2 を参照）
+- [x] `npm run build` が警告なく完了する
+- [x] `npx cdk synth -c notifyEmail=test@example.com` が成功する
+- [x] `npx cdk synth`（context 無し）が明示的なエラーで停止する
+- [x] `README.md` にデプロイ・SNS 確認・手動実行・削除の各手順が記載されている
 
-## 実デプロイ後の検証（ユーザー作業）
+## 計画からの変更点（実装記録）
 
-CDK の合成までは AWS 認証情報なしで検証できるが、以下は実際のデプロイが必要:
+実施日: 2026-08-09 / ブランチ: `feat/monthly-cost-report`
+
+**1. タスク順序を変更した（Task 7 → Task 2〜6）**
+着手時点で環境に `pip` / `venv` が無く Task 2〜6 の TDD を開始できなかったため、Python に依存しない Task 7（CDK）を先に実施した。Task 7 が `lambda/` に求めるのはディレクトリの存在のみで、Jest テストは CloudFormation テンプレートしか検証しないため、順序を入れ替えても検証内容は変わらない。
+
+**2. `Code.fromAsset` に `exclude` を追加した**（計画に無い修正 / コミット `8e5876d`）
+pytest が生成する `lambda/cost_report/__pycache__/*.pyc` がアセットに同梱され、ローカルでテストを実行したかどうかでアセットハッシュが変わっていた。コード無変更でも `cdk diff` に差分が出る。`exclude: ["**/__pycache__", "**/*.pyc"]` を指定し、回帰テスト「Lambda アセットは `__pycache__` の有無に影響されない」を 1 件追加した（Jest が 9 → 10 件になった理由）。詳細は設計書 §4.8。
+
+**3. jest の `moduleFileExtensions` を修正した**（計画に無い修正 / コミット `cee0458`）
+上記の回帰テストが通らず調査したところ、jest の既定の解決順が `.js` を `.ts` より優先し、`npm run build` が出力した古い `lib/*.js` を検証していた。`.ts` を優先するよう明示した。詳細は設計書 §5.1。
+
+**4. Python テスト環境を `.venv` にした**
+Global Constraints は `pip install --user pytest` を前提にしていたが、対象環境には `pip` も `venv` も無かった。`sudo apt install -y python3-venv python3-pip`（ユーザーが別端末で実施）のうえで `.venv` を作成した。テストの実行コマンドは `python3 -m pytest` ではなく `.venv/bin/python -m pytest`。README の開発セクションにセットアップ手順込みで記載した。
+
+**5. README の AWS CLI コマンドを差し替えた**
+Task 8 の SNS 確認コマンドは `describe-stacks --query 'Stacks[0].Outputs'` でトピック ARN を引いていたが、本スタックは `CfnOutput` を定義していないため動作しない。`describe-stack-resources` から `PhysicalResourceId` を引く形に変更し、Lambda 手動実行のコマンドも同じ方式に統一した。
+
+**6. `formatter.py` の未使用 import を削除した**
+計画のコードにあった `from typing import Dict` は同モジュール内で使われていないため削除した。
+
+## 実デプロイ後の検証（ユーザー作業 / 未実施）
+
+CDK の合成までは AWS 認証情報なしで検証済み。以下は実際のデプロイが必要で、まだ行っていない:
 
 1. `npx cdk deploy -c notifyEmail=<自分のメール>` を実行する
 2. 確認メールの **Confirm subscription** をクリックする
 3. Lambda を手動実行し、レポートメールが届くことを確認する
 4. 金額がマネジメントコンソールの Cost Explorer と一致することを確認する
+
+3 の前提として、Billing コンソールで「IAM ユーザー/ロールによる請求情報へのアクセス」が有効である必要がある（無効だと `AccessDeniedException`）。

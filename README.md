@@ -157,7 +157,7 @@ python3 -m venv .venv
 
 ```bash
 npm run build                       # TypeScript のコンパイル
-npm test                            # CDK スタックのテスト (Jest, 9 tests)
+npm test                            # CDK スタックのテスト (Jest, 10 tests)
 .venv/bin/python -m pytest          # Lambda コードのテスト (pytest, 32 tests)
 npx cdk synth -c notifyEmail=test@example.com    # CloudFormation テンプレートの生成
 npx cdk diff -c notifyEmail=you@example.com      # 差分確認
@@ -168,6 +168,11 @@ npx cdk diff -c notifyEmail=you@example.com      # 差分確認
 `boto3` はローカルのテスト用にのみインストールする。Lambda ランタイムには同梱されているため、デプロイ時のバンドルは不要（`requirements.txt` は存在しない）。
 
 Lambda のランタイムは Python 3.13 だが、ローカルの pytest がそのまま動くよう、コードは Python 3.10 互換の構文に留めている。
+
+### ビルド構成上の注意
+
+- **`lambda/` のアセットは `__pycache__` / `*.pyc` を除外している**（`lib/aws-monthly-cost-report-stack.ts`）。除外しないと、ローカルで pytest を実行したかどうかでアセットハッシュが変わり、`cdk diff` / `cdk deploy` に中身のない差分が出る。
+- **jest は `moduleFileExtensions` で `.ts` を `.js` より優先している**（`jest.config.js`）。`npm run build` は `lib/*.js` をソースと同じ場所に出力するため、既定の解決順のままだと `npm test` がビルド当時の古いコードを検証してしまう。
 
 ## IAM 実行ロールの権限
 
