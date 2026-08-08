@@ -1,3 +1,5 @@
+import * as fs from "fs";
+import * as path from "path";
 import { App } from "aws-cdk-lib";
 import { Match, Template } from "aws-cdk-lib/assertions";
 import { AwsMonthlyCostReportStack } from "../lib/aws-monthly-cost-report-stack";
@@ -108,6 +110,31 @@ test("ロググループの保持期間は1ヶ月である", () => {
   template.hasResourceProperties("AWS::Logs::LogGroup", {
     RetentionInDays: 30,
   });
+});
+
+test("Lambda アセットは __pycache__ の有無に影響されない", () => {
+  // ローカルの pytest が生成する .pyc がアセットに混入すると、テストを実行したか
+  // どうかでハッシュが変わり cdk diff に偽の差分が出る。
+  const pycacheDir = path.join(__dirname, "..", "lambda", "cost_report", "__pycache__");
+  const createdForTest = !fs.existsSync(pycacheDir);
+  if (createdForTest) {
+    fs.mkdirSync(pycacheDir, { recursive: true });
+  }
+  const marker = path.join(pycacheDir, "handler.cpython-310.pyc");
+  fs.writeFileSync(marker, "dummy bytecode");
+
+  try {
+    const withPycache = buildTemplate().toJSON();
+    fs.rmSync(marker);
+    const withoutPycache = buildTemplate().toJSON();
+
+    expect(withPycache).toEqual(withoutPycache);
+  } finally {
+    fs.rmSync(marker, { force: true });
+    if (createdForTest) {
+      fs.rmSync(pycacheDir, { recursive: true, force: true });
+    }
+  }
 });
 
 test("環境変数 TOP_N_SERVICES は既定で 10、上書き可能である", () => {

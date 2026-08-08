@@ -41,7 +41,11 @@ export class AwsMonthlyCostReportStack extends Stack {
     this.reportFunction = new lambda.Function(this, "CostReportFunction", {
       runtime: lambda.Runtime.PYTHON_3_13,
       handler: "cost_report.handler.lambda_handler",
-      code: lambda.Code.fromAsset(path.join(__dirname, "..", "lambda")),
+      // ローカルの pytest が生成する .pyc を同梱しない。含めるとローカルでテストを
+      // 実行したかどうかでアセットハッシュが変わり、cdk diff に偽の差分が出る。
+      code: lambda.Code.fromAsset(path.join(__dirname, "..", "lambda"), {
+        exclude: ["**/__pycache__", "**/*.pyc"],
+      }),
       timeout: Duration.seconds(60),
       memorySize: 256,
       // エラー通知が重複して届かないよう、非同期呼び出しの再試行を無効化する。
