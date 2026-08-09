@@ -28,6 +28,15 @@ export class AwsMonthlyCostReportStack extends Stack {
   constructor(scope: Construct, id: string, props: AwsMonthlyCostReportStackProps) {
     super(scope, id, props);
 
+    // bin/app.ts は context を Number() で変換するため、不正な値は NaN になる。ここで
+    // 弾かないと環境変数に "NaN" が入り、deploy は成功するのに毎月の実行だけが失敗する。
+    const topNServices = props.topNServices ?? DEFAULT_TOP_N_SERVICES;
+    if (!Number.isInteger(topNServices) || topNServices < 1) {
+      throw new Error(
+        `topNServices は 1 以上の整数で指定してください（受け取った値: ${topNServices}）。`,
+      );
+    }
+
     this.topic = new sns.Topic(this, "CostReportTopic", {
       displayName: "AWS Monthly Cost Report",
     });
@@ -54,7 +63,7 @@ export class AwsMonthlyCostReportStack extends Stack {
       logGroup,
       environment: {
         SNS_TOPIC_ARN: this.topic.topicArn,
-        TOP_N_SERVICES: String(props.topNServices ?? DEFAULT_TOP_N_SERVICES),
+        TOP_N_SERVICES: String(topNServices),
       },
     });
 

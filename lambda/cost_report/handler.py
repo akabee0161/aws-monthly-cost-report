@@ -43,12 +43,14 @@ def _account_id(context) -> str:
 def lambda_handler(event, context) -> Dict[str, str]:
     # 通知先が無ければエラー通知も送れないため、ここで失敗させて CloudWatch に残す。
     topic_arn = os.environ["SNS_TOPIC_ARN"]
-    top_n = int(os.environ.get("TOP_N_SERVICES", str(formatter.DEFAULT_TOP_N)))
 
     period = periods.build_report_period(_today())
     sns_client = build_sns_client()
 
     try:
+        # topic_arn と違い通知先は判明しているので、解析失敗も try 内でエラー通知に乗せる。
+        top_n = int(os.environ.get("TOP_N_SERVICES", str(formatter.DEFAULT_TOP_N)))
+
         costs = cost_explorer.fetch_monthly_costs(build_ce_client(), period)
         target = cost_explorer.get_month(costs, period.target_start)
         previous = cost_explorer.get_month(costs, period.previous_start)

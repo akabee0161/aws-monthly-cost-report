@@ -101,6 +101,21 @@ def test_エラー通知のpublishも失敗した場合は元の例外を再送�
     assert len(sns_client.calls) == 1
 
 
+def test_TOP_N_SERVICESが不正でもエラー通知を1通送る(env, monkeypatch):
+    # 通知先は分かっているのだから、黙って落ちずにエラーメールで気付けるようにする。
+    monkeypatch.setenv("TOP_N_SERVICES", "NaN")
+    sns_client = RecordingSns()
+    _install(monkeypatch, sns_client, lambda client, period: _costs())
+    monkeypatch.setattr(handler, "_today", lambda: date(2026, 8, 5))
+
+    with pytest.raises(ValueError):
+        handler.lambda_handler({}, FakeContext())
+
+    assert len(sns_client.calls) == 1
+    assert sns_client.calls[0]["Subject"] == "[AWS Cost][ERROR] monthly cost report failed"
+    assert "エラー種別   : ValueError" in sns_client.calls[0]["Message"]
+
+
 def test_SNS_TOPIC_ARN未設定ならKeyErrorを送出する(monkeypatch):
     monkeypatch.delenv("SNS_TOPIC_ARN", raising=False)
 

@@ -146,3 +146,11 @@ test("環境変数 TOP_N_SERVICES は既定で 10、上書き可能である", (
     Environment: { Variables: Match.objectLike({ TOP_N_SERVICES: "5" }) },
   });
 });
+
+test("topNServices が 1 以上の整数でなければ合成時に失敗する", () => {
+  // bin/app.ts の Number() は不正な context を NaN にする。ここで弾かないと環境変数に
+  // "NaN" が入り、deploy は成功するのに毎月の実行だけが失敗する。
+  for (const invalid of [NaN, 0, -1, 3.5, Infinity]) {
+    expect(() => buildTemplate({ topNServices: invalid })).toThrow(/topNServices/);
+  }
+});
