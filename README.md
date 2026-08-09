@@ -90,10 +90,17 @@ FUNCTION_NAME=$(aws cloudformation describe-stack-resources \
   --query "StackResources[?ResourceType=='AWS::Lambda::Function'].PhysicalResourceId" \
   --output text)
 
+# AWS CLI v2
 aws lambda invoke \
   --function-name "$FUNCTION_NAME" \
   --payload '{}' \
   --cli-binary-format raw-in-base64-out \
+  /tmp/cost-report-response.json
+
+# AWS CLI v1（--cli-binary-format は v2 専用オプション。v1 は --payload を生 JSON として扱う）
+aws lambda invoke \
+  --function-name "$FUNCTION_NAME" \
+  --payload '{}' \
   /tmp/cost-report-response.json
 
 cat /tmp/cost-report-response.json
@@ -101,10 +108,23 @@ cat /tmp/cost-report-response.json
 
 `{"status": "ok", "period": "YYYY-MM"}` が返り、数分以内にメールが届けば成功。
 
-ログを確認する:
+ログを確認する。**ロググループ名は `/aws/lambda/<関数名>` ではない。** スタックが Lambda に `logGroup` を明示指定しているため（`lib/aws-monthly-cost-report-stack.ts`）、CDK が生成した名前になる:
 
 ```bash
-aws logs tail "/aws/lambda/$FUNCTION_NAME" --since 10m --follow
+LOG_GROUP=$(aws cloudformation describe-stack-resources \
+  --stack-name AwsMonthlyCostReportStack \
+  --query "StackResources[?ResourceType=='AWS::Logs::LogGroup'].PhysicalResourceId" \
+  --output text)
+
+# AWS CLI v2
+aws logs tail "$LOG_GROUP" --since 10m --follow
+
+# AWS CLI v1（logs tail は v2 専用サブコマンド）
+aws logs filter-log-events \
+  --log-group-name "$LOG_GROUP" \
+  --start-time $(( ($(date +%s) - 600) * 1000 )) \
+  --query "events[].message" \
+  --output text
 ```
 
 ## メール本文の例
